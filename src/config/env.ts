@@ -62,7 +62,8 @@ export function validateEnv(raw: Record<string, unknown>): Env {
     throw new Error('NODE_ENV must be development, production or test');
   }
 
-  const databaseUrl = str(raw.DATABASE_URL);
+  // Vercel's Postgres integration exposes the direct URL as DB_DATABASE_URL.
+  const databaseUrl = str(raw.DATABASE_URL) ?? str(raw.DB_DATABASE_URL);
   if (!databaseUrl) throw new Error('DATABASE_URL is required');
 
   const jwtSecret = str(raw.JWT_SECRET);
