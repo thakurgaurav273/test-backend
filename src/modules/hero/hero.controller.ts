@@ -16,6 +16,8 @@ import {
 import { CreateHeroDto, UpdateHeroDto } from './dto/hero.dto';
 import { HeroEntity } from './entities/hero.entity';
 import { HeroService } from './hero.service';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { AdminRole } from '../../generated/prisma/client';
 
 @ApiTags('Hero')
 @Public()
@@ -32,6 +34,7 @@ export class HeroController {
 }
 
 @ApiTags('Admin / Hero')
+@Roles(AdminRole.CONTENT)
 @AdminApi()
 @Controller('admin/hero')
 export class AdminHeroController {

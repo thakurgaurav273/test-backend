@@ -17,6 +17,8 @@ import {
 import { CreateServiceDto, UpdateServiceDto } from './dto/service.dto';
 import { ServiceEntity } from './entities/service.entity';
 import { ServicesService } from './services.service';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { AdminRole } from '../../generated/prisma/client';
 
 @ApiTags('Services')
 @Public()
@@ -40,6 +42,7 @@ export class ServicesController {
 }
 
 @ApiTags('Admin / Services')
+@Roles(AdminRole.CONTENT)
 @AdminApi()
 @Controller('admin/services')
 export class AdminServicesController {

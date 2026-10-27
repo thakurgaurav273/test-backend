@@ -9,6 +9,7 @@ export interface Env {
   JWT_SECRET: string;
   JWT_EXPIRES_IN_HOURS: number;
   CORS_ORIGINS: string[];
+  ADMIN_PANEL_URL: string;
   COOKIE_SAMESITE: SameSite;
   TRUST_PROXY: boolean | number | string;
   SWAGGER_ENABLED: boolean;
@@ -77,6 +78,10 @@ export function validateEnv(raw: Record<string, unknown>): Env {
   }
 
   const port = int(raw.PORT, 4000, 'PORT');
+  const corsOrigins = (str(raw.CORS_ORIGINS) ?? 'http://localhost:3000')
+    .split(',')
+    .map((origin) => origin.trim().replace(/\/+$/, ''))
+    .filter(Boolean);
 
   return {
     NODE_ENV: nodeEnv,
@@ -92,10 +97,12 @@ export function validateEnv(raw: Record<string, unknown>): Env {
       24,
       'JWT_EXPIRES_IN_HOURS',
     ),
-    CORS_ORIGINS: (str(raw.CORS_ORIGINS) ?? 'http://localhost:3000')
-      .split(',')
-      .map((origin) => origin.trim().replace(/\/+$/, ''))
-      .filter(Boolean),
+    CORS_ORIGINS: corsOrigins,
+    ADMIN_PANEL_URL: (
+      str(raw.ADMIN_PANEL_URL) ??
+      corsOrigins[0] ??
+      'http://localhost:3000'
+    ).replace(/\/+$/, ''),
     COOKIE_SAMESITE: sameSite,
     TRUST_PROXY: parseTrustProxy(raw.TRUST_PROXY),
     SWAGGER_ENABLED: bool(raw.SWAGGER_ENABLED, nodeEnv !== 'production'),

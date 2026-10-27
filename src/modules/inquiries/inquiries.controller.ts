@@ -39,6 +39,8 @@ import {
   InquiryReplyEntity,
 } from './entities/inquiry.entity';
 import { InquiriesService } from './inquiries.service';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { AdminRole } from '../../generated/prisma/client';
 
 @ApiTags('Inquiries')
 @Public()
@@ -61,6 +63,7 @@ export class InquiriesController {
 }
 
 @ApiTags('Admin / Inquiries')
+@Roles(AdminRole.PRE_SALES)
 @AdminApi()
 @Controller('admin/inquiries')
 export class AdminInquiriesController {

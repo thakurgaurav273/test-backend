@@ -7,8 +7,10 @@ import {
 } from '../../common/swagger/api-envelope.decorator';
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { DashboardStatsEntity } from './entities/dashboard-stats.entity';
+import { ALL_ROLES, Roles } from '../../common/decorators/roles.decorator';
 
 @ApiTags('Admin / Dashboard')
+@Roles(...ALL_ROLES)
 @AdminApi()
 @Controller('admin/dashboard')
 export class DashboardController {

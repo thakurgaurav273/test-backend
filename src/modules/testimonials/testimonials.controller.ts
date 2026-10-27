@@ -19,6 +19,8 @@ import {
 } from './dto/testimonial.dto';
 import { TestimonialEntity } from './entities/testimonial.entity';
 import { TestimonialsService } from './testimonials.service';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { AdminRole } from '../../generated/prisma/client';
 
 @ApiTags('Testimonials')
 @Public()
@@ -35,6 +37,7 @@ export class TestimonialsController {
 }
 
 @ApiTags('Admin / Testimonials')
+@Roles(AdminRole.CONTENT)
 @AdminApi()
 @Controller('admin/testimonials')
 export class AdminTestimonialsController {

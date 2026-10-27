@@ -21,6 +21,7 @@ import {
   CurrentAdmin,
 } from '../../common/decorators/current-admin.decorator';
 import { Public } from '../../common/decorators/public.decorator';
+import { ALL_ROLES, Roles } from '../../common/decorators/roles.decorator';
 import { ErrorResponseDto } from '../../common/dto/error-response.dto';
 import {
   AdminApi,
@@ -31,6 +32,7 @@ import { AUTH_COOKIE } from './auth.constants';
 import { AuthService } from './auth.service';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { LoginDto } from './dto/login.dto';
+import { ForgotPasswordDto, ResetPasswordDto } from './dto/password-reset.dto';
 import {
   AdminProfileEntity,
   LoginResultEntity,
@@ -81,7 +83,39 @@ export class AuthController {
     return { loggedOut: true };
   }
 
+  @Public()
+  @Throttle({ default: { limit: 5, ttl: 15 * 60_000 } })
+  @Post('forgot-password')
+  @HttpCode(200)
+  @ApiOperation({
+    summary: 'Email a password-reset link',
+    description:
+      'Always succeeds so the response does not reveal whether the email exists. The link is valid for 1 hour.',
+  })
+  @ApiEnvelope(null)
+  async forgotPassword(
+    @Body() dto: ForgotPasswordDto,
+  ): Promise<{ sent: true }> {
+    await this.auth.forgotPassword(dto);
+    return { sent: true };
+  }
+
+  @Public()
+  @Throttle({ default: { limit: 10, ttl: 15 * 60_000 } })
+  @Post('reset-password')
+  @HttpCode(200)
+  @ApiOperation({
+    summary: 'Set a new password using the emailed token',
+    description: 'Signs out every existing session for that account.',
+  })
+  @ApiEnvelope(null)
+  async resetPassword(@Body() dto: ResetPasswordDto): Promise<{ reset: true }> {
+    await this.auth.resetPassword(dto);
+    return { reset: true };
+  }
+
   @Get('me')
+  @Roles(...ALL_ROLES)
   @AdminApi()
   @ApiOperation({ summary: 'Current admin profile' })
   @ApiEnvelope(AdminProfileEntity)
@@ -90,16 +124,27 @@ export class AuthController {
   }
 
   @Patch('password')
+  @Roles(...ALL_ROLES)
   @AdminApi()
   @Throttle({ default: { limit: 5, ttl: 15 * 60_000 } })
-  @ApiOperation({ summary: 'Change own password' })
+  @ApiOperation({
+    summary: 'Change own password',
+    description:
+      'Signs out other sessions. The session cookie is refreshed and the new token is returned.',
+  })
   @ApiEnvelope(null)
   async changePassword(
     @CurrentAdmin() admin: AuthenticatedAdmin,
     @Body() dto: ChangePasswordDto,
-  ): Promise<{ changed: true }> {
-    await this.auth.changePassword(admin.id, dto);
-    return { changed: true };
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<{ changed: true; token: string; expiresIn: number }> {
+    const token = await this.auth.changePassword(admin.id, dto);
+    const expiresIn = this.auth.tokenTtlSeconds;
+    res.cookie(AUTH_COOKIE, token, {
+      ...this.cookieOptions(),
+      maxAge: expiresIn * 1000,
+    });
+    return { changed: true, token, expiresIn };
   }
 
   private cookieOptions(): CookieOptions {

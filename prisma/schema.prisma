@@ -11,7 +11,8 @@ datasource db {
 
 enum AdminRole {
   ADMIN
-  EDITOR
+  CONTENT
+  PRE_SALES
 }
 
 enum PublishStatus {
@@ -36,15 +37,20 @@ enum EmailStatus {
 }
 
 model Admin {
-  id           String    @id @default(cuid())
-  email        String    @unique
-  name         String
-  passwordHash String
-  role         AdminRole @default(ADMIN)
-  isActive     Boolean   @default(true)
-  lastLoginAt  DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id                     String    @id @default(cuid())
+  email                  String    @unique
+  name                   String
+  passwordHash           String
+  role                   AdminRole @default(ADMIN)
+  isActive               Boolean   @default(true)
+  lastLoginAt            DateTime?
+  /// Sessions issued before this are rejected (set on password change/reset).
+  passwordChangedAt      DateTime?
+  /// SHA-256 of the emailed reset token; the raw token is never stored.
+  passwordResetTokenHash String?   @unique
+  passwordResetExpiresAt DateTime?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
 
   replies InquiryReply[]
 }

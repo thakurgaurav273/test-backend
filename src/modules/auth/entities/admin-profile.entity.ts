@@ -1,7 +1,12 @@
+import { ApiProperty } from '@nestjs/swagger';
+import { AdminRole } from '../../../generated/prisma/client';
+
 export class AdminProfileEntity {
   id: string;
   email: string;
   name: string;
+  @ApiProperty({ enum: AdminRole, enumName: 'AdminRole' })
+  role: AdminRole;
   lastLoginAt: Date | null;
   createdAt: Date;
 }

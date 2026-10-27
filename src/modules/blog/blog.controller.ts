@@ -10,7 +10,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiNotFoundResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { PublishStatus } from '../../generated/prisma/client';
+import { AdminRole, PublishStatus } from '../../generated/prisma/client';
 import { Public } from '../../common/decorators/public.decorator';
 import { ErrorResponseDto } from '../../common/dto/error-response.dto';
 import {
@@ -37,6 +37,7 @@ import {
   BlogPostSummaryEntity,
   BlogTagEntity,
 } from './entities/blog.entity';
+import { Roles } from '../../common/decorators/roles.decorator';
 
 @ApiTags('Blog')
 @Public()
@@ -81,6 +82,7 @@ export class BlogController {
 }
 
 @ApiTags('Admin / Blog')
+@Roles(AdminRole.CONTENT)
 @AdminApi()
 @Controller('admin/blogs')
 export class AdminBlogController {
@@ -135,6 +137,7 @@ export class AdminBlogController {
 }
 
 @ApiTags('Admin / Blog')
+@Roles(AdminRole.CONTENT)
 @AdminApi()
 @Controller('admin')
 export class AdminBlogTaxonomyController {

@@ -17,6 +17,8 @@ import {
 import { CreatePageDto, UpdatePageDto } from './dto/page.dto';
 import { PageEntity } from './entities/page.entity';
 import { PagesService } from './pages.service';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { AdminRole } from '../../generated/prisma/client';
 
 @ApiTags('Pages')
 @Public()
@@ -36,6 +38,7 @@ export class PagesController {
 }
 
 @ApiTags('Admin / Pages')
+@Roles(AdminRole.CONTENT)
 @AdminApi()
 @Controller('admin/pages')
 export class AdminPagesController {

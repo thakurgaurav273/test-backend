@@ -22,6 +22,8 @@ import {
 } from './dto/project.dto';
 import { ProjectEntity } from './entities/project.entity';
 import { ProjectsService } from './projects.service';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { AdminRole } from '../../generated/prisma/client';
 
 @ApiTags('Projects')
 @Public()
@@ -45,6 +47,7 @@ export class ProjectsController {
 }
 
 @ApiTags('Admin / Projects')
+@Roles(AdminRole.CONTENT)
 @AdminApi()
 @Controller('admin/projects')
 export class AdminProjectsController {

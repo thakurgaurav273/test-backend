@@ -10,8 +10,10 @@ import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import type { AuthenticatedRequest } from '../../../common/decorators/current-admin.decorator';
 import { IS_PUBLIC_KEY } from '../../../common/decorators/public.decorator';
+import { ROLES_KEY } from '../../../common/decorators/roles.decorator';
 import { Env, trustedOrigins } from '../../../config/env';
 import { PrismaService } from '../../../core/prisma/prisma.service';
+import { AdminRole } from '../../../generated/prisma/client';
 import { AUTH_COOKIE } from '../auth.constants';
 import type { JwtPayload } from '../auth.service';
 
@@ -71,12 +73,40 @@ export class JwtAuthGuard implements CanActivate {
 
     const admin = await this.prisma.admin.findUnique({
       where: { id: payload.sub },
-      select: { id: true, email: true, name: true, isActive: true },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        isActive: true,
+        passwordChangedAt: true,
+      },
     });
     if (!admin?.isActive)
       throw new UnauthorizedException('Account is not active');
 
-    request.admin = { id: admin.id, email: admin.email, name: admin.name };
+    // Sessions issued before the latest password change/reset are revoked.
+    if (
+      admin.passwordChangedAt &&
+      (payload.iat ?? 0) * 1000 < admin.passwordChangedAt.getTime() - 1000
+    ) {
+      throw new UnauthorizedException('Invalid or expired session');
+    }
+
+    const roles = this.reflector.getAllAndOverride<AdminRole[] | undefined>(
+      ROLES_KEY,
+      [context.getHandler(), context.getClass()],
+    );
+    if (admin.role !== AdminRole.ADMIN && !roles?.includes(admin.role)) {
+      throw new ForbiddenException('Your role cannot access this resource');
+    }
+
+    request.admin = {
+      id: admin.id,
+      email: admin.email,
+      name: admin.name,
+      role: admin.role,
+    };
     return true;
   }
 

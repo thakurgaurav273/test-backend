@@ -17,6 +17,8 @@ import {
 import { CreateFaqDto, FaqQueryDto, UpdateFaqDto } from './dto/faq.dto';
 import { FaqEntity } from './entities/faq.entity';
 import { FaqsService } from './faqs.service';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { AdminRole } from '../../generated/prisma/client';
 
 @ApiTags('FAQs')
 @Public()
@@ -33,6 +35,7 @@ export class FaqsController {
 }
 
 @ApiTags('Admin / FAQs')
+@Roles(AdminRole.CONTENT)
 @AdminApi()
 @Controller('admin/faqs')
 export class AdminFaqsController {
