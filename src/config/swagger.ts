@@ -3,6 +3,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AUTH_COOKIE } from '../modules/auth/auth.constants';
 
 export const SWAGGER_PATH = 'api/docs';
+const SWAGGER_UI_CDN = 'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.32.13';
 
 export function setupSwagger(app: INestApplication): void {
   const config = new DocumentBuilder()
@@ -37,6 +38,12 @@ export function setupSwagger(app: INestApplication): void {
   SwaggerModule.setup(SWAGGER_PATH, app, document, {
     jsonDocumentUrl: `${SWAGGER_PATH}-json`,
     customSiteTitle: 'ZoyCoders API Docs',
+    // Serverless hosts (Vercel) don't ship swagger-ui-dist's static files, so load them from a CDN.
+    customCssUrl: `${SWAGGER_UI_CDN}/swagger-ui.css`,
+    customJs: [
+      `${SWAGGER_UI_CDN}/swagger-ui-bundle.js`,
+      `${SWAGGER_UI_CDN}/swagger-ui-standalone-preset.js`,
+    ],
     swaggerOptions: {
       persistAuthorization: true,
       tagsSorter: 'alpha',
