@@ -1,0 +1,28 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+coverage/
+*.tsbuildinfo
+
+# env files (keep .env.example committed)
+.env
+.env.*
+!.env.example
+
+# local uploads (Cloudinary is used in production)
+uploads/
+
+# logs
+*.log
+logs/
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# generated Prisma Client (recreated by `prisma generate` on install)
+src/generated/

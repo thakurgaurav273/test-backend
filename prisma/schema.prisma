@@ -1,0 +1,231 @@
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  moduleFormat        = "cjs"
+  importFileExtension = ""
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum AdminRole {
+  ADMIN
+  EDITOR
+}
+
+enum PublishStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum InquiryType {
+  CONTACT
+  PROJECT
+}
+
+enum InquiryStatus {
+  NEW
+  IN_PROGRESS
+  REPLIED
+}
+
+enum EmailStatus {
+  SENT
+  FAILED
+}
+
+model Admin {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  passwordHash String
+  role         AdminRole @default(ADMIN)
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  replies InquiryReply[]
+}
+
+model HeroSection {
+  id                String   @id @default(cuid())
+  heading           String
+  subheading        String?
+  description       String?
+  primaryCtaLabel   String?
+  primaryCtaUrl     String?
+  secondaryCtaLabel String?
+  secondaryCtaUrl   String?
+  imageUrl          String?
+  imagePublicId     String?
+  imageAlt          String?
+  isPublished       Boolean  @default(false)
+  sortOrder         Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model Service {
+  id               String   @id @default(cuid())
+  title            String
+  slug             String   @unique
+  shortDescription String
+  description      String?
+  icon             String?
+  technologies     String[] @default([])
+  imageUrl         String?
+  imagePublicId    String?
+  imageAlt         String?
+  seoTitle         String?
+  seoDescription   String?
+  isPublished      Boolean  @default(false)
+  sortOrder        Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Project {
+  id             String   @id @default(cuid())
+  title          String
+  slug           String   @unique
+  summary        String
+  description    String?
+  client         String?
+  technologies   String[] @default([])
+  imageUrl       String?
+  imagePublicId  String?
+  imageAlt       String?
+  demoUrl        String?
+  repoUrl        String?
+  seoTitle       String?
+  seoDescription String?
+  isFeatured     Boolean  @default(false)
+  isPublished    Boolean  @default(false)
+  sortOrder      Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([isPublished, isFeatured])
+}
+
+model BlogCategory {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  posts BlogPost[]
+}
+
+model BlogTag {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  createdAt DateTime @default(now())
+
+  posts BlogPost[]
+}
+
+model BlogPost {
+  id                 String        @id @default(cuid())
+  title              String
+  slug               String        @unique
+  excerpt            String
+  /// Markdown or HTML. Frontends must sanitize before rendering as HTML.
+  content            String
+  coverImageUrl      String?
+  coverImagePublicId String?
+  coverImageAlt      String?
+  authorName         String
+  seoTitle           String?
+  seoDescription     String?
+  status             PublishStatus @default(DRAFT)
+  publishedAt        DateTime?
+  categoryId         String?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  category BlogCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  tags     BlogTag[]
+
+  @@index([status, publishedAt])
+}
+
+model Testimonial {
+  id             String   @id @default(cuid())
+  name           String
+  role           String?
+  company        String?
+  quote          String
+  rating         Int?
+  avatarUrl      String?
+  avatarPublicId String?
+  isPublished    Boolean  @default(false)
+  sortOrder      Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Faq {
+  id          String   @id @default(cuid())
+  question    String
+  answer      String
+  category    String?
+  isPublished Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+/// CMS pages such as privacy-policy and terms-and-conditions (used by web + mobile).
+model Page {
+  id             String   @id @default(cuid())
+  slug           String   @unique
+  title          String
+  content        String
+  seoTitle       String?
+  seoDescription String?
+  isPublished    Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Inquiry {
+  id        String        @id @default(cuid())
+  type      InquiryType   @default(CONTACT)
+  name      String
+  email     String
+  phone     String?
+  company   String?
+  subject   String
+  message   String
+  service   String?
+  budget    String?
+  status    InquiryStatus @default(NEW)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  replies InquiryReply[]
+
+  @@index([status, createdAt])
+}
+
+model InquiryReply {
+  id           String      @id @default(cuid())
+  inquiryId    String
+  sentById     String?
+  subject      String
+  body         String
+  emailStatus  EmailStatus
+  errorMessage String?
+  createdAt    DateTime    @default(now())
+
+  inquiry Inquiry @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+  sentBy  Admin?  @relation(fields: [sentById], references: [id], onDelete: SetNull)
+
+  @@index([inquiryId])
+}
